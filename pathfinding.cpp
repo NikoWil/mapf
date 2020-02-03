@@ -138,19 +138,23 @@ a_star(const SpaceTimePoint start, const SpacePoint goal, uint32_t rest_after, i
             // Normally we check the cost so far, our cost so far is always the same. So we check came_from instead,
             // as any seen (even not explored) node has an entry
             const int32_t new_charge = n.x == curr.first.x && n.y == curr.first.y ? curr.second : curr.second - 1;
-            if (new_charge <= 0) {
+            if (new_charge < 0) {
                 break;
             }
 
-            if ((n.x == start.x && n.y == start.y && n.t - start.t>= heuristic_factor * heuristic_distance) ||
-                n.t >= heuristic_factor * charge) { // we are staying still...
+            if (/*(n.x == start.x && n.y == start.y && n.t - start.t >= heuristic_factor * heuristic_distance) || */
+                    (n.t - start.t) >= (heuristic_factor * heuristic_distance)) { // we are staying still...
+                std::cout << "Quit for heuristic!\n";
+                std::cout << "Heuristic distance: " << heuristic_distance << "\n";
+                std::cout << "n: \t" << n << "\n";
+                std::cout << "start: \t" << start << "\n";
                 return std::vector<SpaceTimePoint>{};
             }
 
             if (came_from.empty()) { // no reservations exist
                 came_from.insert(std::make_pair(n, curr.first));
                 open_set.push(std::make_pair(n, new_charge));
-            } else if (came_from.find(n) == came_from.end()) { // no reservations that trouble us                
+            } else if (came_from.find(n) == came_from.end()) { // no reservations that trouble us
                 if (SpacePoint(n) == goal) { // check if the goal is free for the additional rest period
                     bool all_available = true;
                     for (uint32_t i{1}; i <= rest_after + 1; ++i) {
@@ -184,7 +188,7 @@ find_path_and_update(SpaceTimePoint start, SpacePoint goal, uint32_t rest_after,
     std::vector<SpaceTimePoint> path;
     if (start.x != goal.x && start.y != goal.y) {
         path = a_star(start, goal, rest_after, charge, width, height, reservations);
-        if (path.size() == 0) {
+        if (path.empty()) {
             return std::make_pair(false, -1);
         }
     }
@@ -196,7 +200,7 @@ find_path_and_update(SpaceTimePoint start, SpacePoint goal, uint32_t rest_after,
 }
 
 int32_t get_used_charge(const std::vector<SpaceTimePoint> &path) {
-    if (path.size() == 0) {
+    if (path.empty()) {
         return 0;
     }
 

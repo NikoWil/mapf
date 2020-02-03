@@ -29,7 +29,7 @@ Instance parse_instance(const std::string &filename) {
         std::cout << "Cannot open the file: " << filename << "\n";
         std::exit(1);
     }
-    if (lines.size() == 0) {
+    if (lines.empty()) {
         std::cout << "Empty instance, what the heck?\n";
         std::exit(0);
     }
@@ -52,12 +52,12 @@ Instance parse_instance(const std::string &filename) {
         for (size_t k{1}; k < l.length() - 1; ++k) { // skip left and right wall
             char char_at = l[k];
             if (char_at >= 'A' && char_at <= 'Z') { // Capital letter
-                inst.shelf_positions.push_back(std::make_pair(char_at, SpacePoint(k - 1, i - 1)));
+                inst.shelf_positions.emplace_back(char_at, SpacePoint(k - 1, i - 1));
             } else if (char_at == '_') { // _ charging station
-                inst.charger_positions.push_back(SpacePoint(k - 1, i - 1));
+                inst.charger_positions.emplace_back(k - 1, i - 1);
             } else if (char_at >= '0' && char_at <= '9') { // digit
                 int32_t id = char_at - '0';
-                inst.robot_positions.push_back(std::make_pair(id, SpacePoint(k - 1, i - 1)));
+                inst.robot_positions.emplace_back(id, SpacePoint(k - 1, i - 1));
             }
         }
     }
@@ -67,12 +67,17 @@ Instance parse_instance(const std::string &filename) {
         std::exit(1);
     }
 
-    if (i == lines.size() || lines[i].find("charge") != 0) {
+    if (i == lines.size() || lines.at(i).find("charge") != 0) {
         std::cout << "Invalid instance, charge needed\n";
         std::exit(1);
     }
     inst.charge = std::stoi(lines[i].substr(7));
-    i += 2; // skip next line that only says 'packages'
+    i += 1; // skip next line that only says 'packages'
+    if (i == lines.size() || lines.at(i).find("packages") != 0) {
+        std::cout << "Invalid instance, packages needed\n";
+        std::exit(1);
+    }
+    i += 1;
     for (; i < lines.size(); ++i) { // parse the needed deliveries
         const auto line = lines.at(i);
         char id = line.at(0);
@@ -92,7 +97,7 @@ void print_instance(const Instance &inst) {
     for (const auto s : inst.shelf_positions) {
         std::cout << "\t" << s.first << " ,x: " << s.second.x << " ,y: " << s.second.y << "\n";
     }
-    std::cout << "robot_position:\n";
+    std::cout << "robot_positions:\n";
     for (const auto r : inst.robot_positions) {
         std::cout << "\t" << r.first << ", x: " << r.second.x << " ,y: " << r.second.y << "\n";
     }
