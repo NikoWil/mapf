@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <random>
+#include <fstream>
 
 #include "pathfinding.h"
 #include "input_parsing.h"
@@ -40,8 +41,33 @@ bool find_actions(SpaceTimePoint start, int32_t charge, int32_t needed_steps, in
                   const std::unordered_set<SpaceTimePoint> &reservations, std::mt19937 &rng,
                   std::vector<SpaceTimePoint> &path);
 
-void print_output(const std::vector<std::pair<int32_t, std::string>>& paths, const std:string& out_filename) {
-    
+void print_output(std::vector<std::pair<int32_t, std::string>>& paths, const std::string& out_filename) {
+    std::ofstream fs(out_filename);
+    if (!fs) {
+        std::cout << "Could not open output filename\n";
+        std::exit(1);
+    }
+
+    std::sort(paths.begin(), paths.end(), [](const auto p1, const auto p2) {
+        return p1.first < p2.first;
+    });
+
+    for (const auto& p : paths) {
+        std::cout << p.first << ", " << p.second.size() << "\n";
+    }
+
+    std::string out_string;
+    const size_t s{paths.size()};
+    // FIXME: assumption, that all path strings are of same length
+    for (size_t k{0}; k < paths.at(0).second.size(); ++k) {
+        for (size_t l{0}; l < s; ++l) {
+            out_string.push_back(paths.at(l).second.at(k));
+        }
+        out_string.push_back('\n');
+    }
+    fs.write(out_string.data(), out_string.size());
+
+    fs.close();
 }
 
 int main(int argc, char *argv[]) {
@@ -314,6 +340,8 @@ int main(int argc, char *argv[]) {
     for (const auto &m : move_strings) {
         std::cout << "id: " << m.first << ", str: " << m.second << "\n";
     }
+
+    print_output(move_strings, argv[2]);
 
     return 0;
 }
