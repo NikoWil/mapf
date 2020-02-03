@@ -22,7 +22,7 @@ bool read_lines(const std::string &filename, std::vector<std::string> &lines) {
     return true;
 }
 
-Instance parse_instance(const std::string& filename) {
+Instance parse_instance(const std::string &filename) {
     std::vector<std::string> lines;
 
     if (!read_lines(filename, lines)) {
@@ -84,7 +84,7 @@ Instance parse_instance(const std::string& filename) {
     return inst;
 }
 
-void print_instance(const Instance& inst) {
+void print_instance(const Instance &inst) {
     std::cout << "width: " << inst.width << "\n";
     std::cout << "height: " << inst.height << "\n";
     std::cout << "charge: " << inst.charge << "\n";

@@ -27,8 +27,8 @@ struct Instance {
 
 bool read_lines(const std::string &filename, std::vector<std::string> &lines);
 
-Instance parse_instance(const std::string& filename);
+Instance parse_instance(const std::string &filename);
 
-void print_instance(const Instance& inst);
+void print_instance(const Instance &inst);
 
 #endif //MAPF_INPUT_PARSING_H

@@ -39,6 +39,10 @@ struct SpacePoint {
 
     bool operator==(const SpacePoint other) const noexcept;
 
+    bool operator!=(const SpacePoint other) const noexcept;
+
+    friend std::ostream &operator<<(std::ostream& os, const SpacePoint p);
+
     int32_t x;
     int32_t y;
 };
@@ -48,9 +52,9 @@ struct SpaceTimePoint {
 
     explicit SpaceTimePoint(int32_t x, int32_t y, int32_t t);
 
-    friend std::ostream &operator<<(std::ostream &os, SpaceTimePoint p);
+    friend std::ostream &operator<<(std::ostream &os, const SpaceTimePoint p);
 
-    bool operator==(const SpaceTimePoint &other) const;
+    bool operator==(const SpaceTimePoint other) const;
 
     int32_t x;
     int32_t y;
@@ -81,7 +85,21 @@ get_neighbours(SpaceTimePoint p, int32_t width, int32_t height, const std::unord
 std::vector<SpaceTimePoint>
 reconstruct_path(const std::unordered_map<SpaceTimePoint, SpaceTimePoint> &came_from, SpaceTimePoint goal);
 
-std::vector<SpaceTimePoint> a_star(SpacePoint start, SpacePoint goal, uint32_t width, uint32_t height,
-                                   const std::unordered_set<SpaceTimePoint> &reservations);
+/**
+ * start: the start node
+ * goal: the goal node, time to reach doesn't matter
+ * 
+ * rest_after: number of time units the field needs to stay free after arrival, e.g. for loading, unloading, charging
+ * max_charge: the max. number of move actions that are legal to be executed, resting does not take charge
+ */
+std::vector<SpaceTimePoint>
+a_star(SpaceTimePoint start, SpacePoint goal, uint32_t rest_after, int32_t charge, uint32_t width, uint32_t height,
+       const std::unordered_set<SpaceTimePoint> &reservations);
+
+std::pair<bool, int32_t>
+find_path_and_update(SpaceTimePoint start, SpacePoint goal, uint32_t rest_after, int32_t charge, uint32_t width,
+                     uint32_t height, std::unordered_set<SpaceTimePoint> &reservations);
+
+int32_t get_used_charge(const std::vector<SpaceTimePoint> &path);
 
 #endif //MAPF_PATHFINDING_H
