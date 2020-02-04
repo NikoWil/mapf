@@ -283,6 +283,7 @@ int main(int argc, char *argv[]) {
         // We didn't find any good robot. Nooo!
         if (!delivery_handled) {
             std::cout << "No solution\n";
+            std::exit(0);
             break;
         }
     }
@@ -294,6 +295,7 @@ int main(int argc, char *argv[]) {
         max_length = std::max(max_length, m.second.length());
     }
 
+    std::cout << "robot_endpoints:\n";
     for (const auto& r : robot_endpoints) {
         std::cout << "id: " << std::get<0>(r) << ", " << std::get<2>(r) << "\n";
     }
@@ -306,7 +308,7 @@ int main(int argc, char *argv[]) {
     std::sort(sorted_reservations1.begin(), sorted_reservations1.end(), [](auto r1, auto r2) {
         return r1.t < r2.t;
     });
-    print_path(sorted_reservations1, "sorted_reservations 1");
+    //print_path(sorted_reservations1, "sorted_reservations 1");
 
     std::mt19937 rng{std::random_device{}()};
     for (const auto &r : robot_endpoints) {
@@ -314,7 +316,7 @@ int main(int argc, char *argv[]) {
         const auto robot_id = std::get<0>(r);
 
         if (static_cast<size_t>(end_time) < max_length) {
-            const auto needed_steps = max_length - end_time;
+            const auto needed_steps = max_length - end_time - 1;
             const auto start = std::get<2>(r);
             const auto charge = std::get<1>(r);
 
@@ -325,7 +327,9 @@ int main(int argc, char *argv[]) {
                         << "A solution might be found if we get permission to blow up robots that are past their use\n";
                 std::exit(0);
             } else {
+                rest_path.push_back(start);
                 std::reverse(rest_path.begin(), rest_path.end());
+                print_path(rest_path, "rest_path after reversal");
                 for (const auto &p : rest_path) {
                     reservations.insert(p);
                 }
@@ -348,7 +352,7 @@ int main(int argc, char *argv[]) {
     std::sort(sorted_reservations.begin(), sorted_reservations.end(), [](auto r1, auto r2) {
         return r1.t < r2.t;
     });
-    print_path(sorted_reservations, "sorted_reservations 2");
+    //print_path(sorted_reservations, "sorted_reservations 2");
 
     std::cout << "Final movements:\n";
     for (const auto &m : move_strings) {
@@ -362,11 +366,8 @@ int main(int argc, char *argv[]) {
 
 bool is_avail(SpaceTimePoint p, const std::unordered_set<SpaceTimePoint> &reservations) {
     if (reservations.empty()) {
-        std::cout << "Case reservations.empty()\n";
         return true;
     }
-
-    std::cout << (reservations.find(SpaceTimePoint(p.x, p.y, p.t - 1)) != reservations.end()) << "\n";
 
     return reservations.find(p) == reservations.end()
            && reservations.find(SpaceTimePoint(p.x, p.y, p.t - 1)) == reservations.end()
@@ -404,7 +405,6 @@ bool find_actions(SpaceTimePoint start, int32_t charge, int32_t needed_steps, in
             avail_neighbours.push_back(n);
         }
     }
-    print_path(avail_neighbours, "avail_neighbours");
     // we do a beautiful random walk. Why? Why not!
     std::shuffle(avail_neighbours.begin(), avail_neighbours.end(), rng);
     for (const auto n : avail_neighbours) {

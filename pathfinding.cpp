@@ -122,7 +122,7 @@ a_star(const SpaceTimePoint start, const SpacePoint goal, uint32_t rest_after, i
 
     // If we don't manage to move away from the start or spend >= 4/5ths of the time waiting, give up
     const auto heuristic_distance = static_cast<int32_t>(manhatten_distance(start, goal));
-    const int32_t heuristic_factor = 5;
+    const int32_t heuristic_factor = 20;
 
     while (!open_set.empty()) {
         const auto curr = open_set.top();
