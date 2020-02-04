@@ -115,8 +115,6 @@ int main(int argc, char *argv[]) {
         // Order robots by who is out of work first
         std::sort(robot_endpoints.begin(), robot_endpoints.end(), time_comp);
 
-        std::cout << "New delivery.\n\tstart: " << delivery_start << "\n\tgoal: " << delivery_goal << "\n";
-
         for (auto &robot : robot_endpoints) {
             const auto robot_start = std::get<2>(robot);
             auto charge = std::get<1>(robot);
@@ -126,8 +124,6 @@ int main(int argc, char *argv[]) {
             const auto to_start = a_star(robot_start, delivery_start, 1, charge, inst.width, inst.height, reservations);
             charge = charge - get_used_charge(to_start);
             if (charge < 0 || to_start.empty()) { continue; }
-            //print_path(to_start, "to_start");
-            //std::cout << "charge: " << charge << "\n";
 
             // rest for a moment to load the package
             const SpaceTimePoint delivery_start_timed(to_start.back().x, to_start.back().y, to_start.back().t + 1);
@@ -145,8 +141,6 @@ int main(int argc, char *argv[]) {
             const auto to_charge_1 = a_star(delivery_start_timed, inst.charger_positions.at(0), inst.charge, charge,
                                             inst.width, inst.height, reservations);
             charge = charge - get_used_charge(to_charge_1);
-            //print_path(to_charge_1, "to_charge_1");
-            //std::cout << "charge: " << charge << "\n";
 
             if (charge < 0 || to_charge_1.empty()) { continue; }
 
@@ -160,8 +154,6 @@ int main(int argc, char *argv[]) {
             const auto to_goal = a_star(charger_after_recharge, delivery_goal, 1, charge, inst.width, inst.height,
                                         reservations);
             charge = charge - get_used_charge(to_goal);
-            //print_path(to_goal, "to_goal");
-            //std::cout << "charge: " << charge << "\n";
             if (charge < 0 || to_goal.empty()) { continue; }
 
             // rest for a moment to unload
@@ -177,8 +169,6 @@ int main(int argc, char *argv[]) {
             const auto to_charge_2 = a_star(after_delivery, inst.charger_positions.at(0), inst.charge, charge,
                                             inst.width, inst.height, reservations);
             charge = charge - get_used_charge(to_charge_2);
-            //print_path(to_charge_2, "to_charge_2");
-            //std::cout << "charge: " << charge << "\n";
             if (charge < 0) { continue; }
 
             auto rest_period_2{0};
@@ -193,7 +183,6 @@ int main(int argc, char *argv[]) {
                 robot_endpoint = SpaceTimePoint(to_goal.back().x, to_goal.back().y, to_goal.back().t + 1);
             }
 
-            std::cout << "rest period 2: " << rest_period_2 << "\n";
             // Assign a new position + charge to our robot
             robot = std::make_tuple(robot_id, charge, robot_endpoint);
 
@@ -266,8 +255,6 @@ int main(int argc, char *argv[]) {
                     move_string.push_back('S');
                 }
             }
-            std::cout << "robot: " << robot_id << ", end point: " << robot_endpoint << ", move_string: " << move_string
-                      << "\n";
 
             for (auto &m : move_strings) {
                 if (m.first == robot_id) {
@@ -295,21 +282,6 @@ int main(int argc, char *argv[]) {
         max_length = std::max(max_length, m.second.length());
     }
 
-    std::cout << "robot_endpoints:\n";
-    for (const auto& r : robot_endpoints) {
-        std::cout << "id: " << std::get<0>(r) << ", " << std::get<2>(r) << "\n";
-    }
-
-    std::cout << "reservations 1\n";
-    std::vector<SpaceTimePoint> sorted_reservations1;
-    for (const auto r : reservations) {
-        sorted_reservations1.push_back(r);
-    }
-    std::sort(sorted_reservations1.begin(), sorted_reservations1.end(), [](auto r1, auto r2) {
-        return r1.t < r2.t;
-    });
-    //print_path(sorted_reservations1, "sorted_reservations 1");
-
     std::mt19937 rng{std::random_device{}()};
     for (const auto &r : robot_endpoints) {
         const auto end_time = std::get<2>(r).t;
@@ -329,7 +301,6 @@ int main(int argc, char *argv[]) {
             } else {
                 rest_path.push_back(start);
                 std::reverse(rest_path.begin(), rest_path.end());
-                print_path(rest_path, "rest_path after reversal");
                 for (const auto &p : rest_path) {
                     reservations.insert(p);
                 }
@@ -343,16 +314,6 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
-    std::cout << "reservations 2\n";
-    std::vector<SpaceTimePoint> sorted_reservations;
-    for (const auto r : reservations) {
-        sorted_reservations.push_back(r);
-    }
-    std::sort(sorted_reservations.begin(), sorted_reservations.end(), [](auto r1, auto r2) {
-        return r1.t < r2.t;
-    });
-    //print_path(sorted_reservations, "sorted_reservations 2");
 
     std::cout << "Final movements:\n";
     for (const auto &m : move_strings) {
