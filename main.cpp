@@ -41,7 +41,7 @@ bool find_actions(SpaceTimePoint start, int32_t charge, int32_t needed_steps, in
                   const std::unordered_set<SpaceTimePoint> &reservations, std::mt19937 &rng,
                   std::vector<SpaceTimePoint> &path);
 
-void print_output(std::vector<std::pair<int32_t, std::string>>& paths, const std::string& out_filename) {
+void print_output(std::vector<std::pair<int32_t, std::string>> &paths, const std::string &out_filename) {
     std::ofstream fs(out_filename);
     if (!fs) {
         std::cout << "Could not open output filename\n";
@@ -51,10 +51,6 @@ void print_output(std::vector<std::pair<int32_t, std::string>>& paths, const std
     std::sort(paths.begin(), paths.end(), [](const auto p1, const auto p2) {
         return p1.first < p2.first;
     });
-
-    for (const auto& p : paths) {
-        std::cout << p.first << ", " << p.second.size() << "\n";
-    }
 
     std::string out_string;
     const size_t s{paths.size()};
@@ -197,6 +193,7 @@ int main(int argc, char *argv[]) {
                 robot_endpoint = SpaceTimePoint(to_goal.back().x, to_goal.back().y, to_goal.back().t + 1);
             }
 
+            std::cout << "rest period 2: " << rest_period_2 << "\n";
             // Assign a new position + charge to our robot
             robot = std::make_tuple(robot_id, charge, robot_endpoint);
 
@@ -269,7 +266,8 @@ int main(int argc, char *argv[]) {
                     move_string.push_back('S');
                 }
             }
-            std::cout << "robot: " << robot_id << ", end point: " << robot_endpoint << ", move_string: " << move_string << "\n";
+            std::cout << "robot: " << robot_id << ", end point: " << robot_endpoint << ", move_string: " << move_string
+                      << "\n";
 
             for (auto &m : move_strings) {
                 if (m.first == robot_id) {
@@ -296,18 +294,24 @@ int main(int argc, char *argv[]) {
         max_length = std::max(max_length, m.second.length());
     }
 
-    /*std::cout << "reservations\n";
+    for (const auto& r : robot_endpoints) {
+        std::cout << "id: " << std::get<0>(r) << ", " << std::get<2>(r) << "\n";
+    }
+
+    std::cout << "reservations 1\n";
+    std::vector<SpaceTimePoint> sorted_reservations1;
     for (const auto r : reservations) {
-        std::cout << r << "\n";
-    }*/
+        sorted_reservations1.push_back(r);
+    }
+    std::sort(sorted_reservations1.begin(), sorted_reservations1.end(), [](auto r1, auto r2) {
+        return r1.t < r2.t;
+    });
+    print_path(sorted_reservations1, "sorted_reservations 1");
 
     std::mt19937 rng{std::random_device{}()};
     for (const auto &r : robot_endpoints) {
         const auto end_time = std::get<2>(r).t;
         const auto robot_id = std::get<0>(r);
-
-        std::cout << "end_time: " << end_time << "\n";
-        std::cout << "max_length: " << max_length << "\n";
 
         if (static_cast<size_t>(end_time) < max_length) {
             const auto needed_steps = max_length - end_time;
@@ -336,6 +340,16 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    std::cout << "reservations 2\n";
+    std::vector<SpaceTimePoint> sorted_reservations;
+    for (const auto r : reservations) {
+        sorted_reservations.push_back(r);
+    }
+    std::sort(sorted_reservations.begin(), sorted_reservations.end(), [](auto r1, auto r2) {
+        return r1.t < r2.t;
+    });
+    print_path(sorted_reservations, "sorted_reservations 2");
+
     std::cout << "Final movements:\n";
     for (const auto &m : move_strings) {
         std::cout << "id: " << m.first << ", str: " << m.second << "\n";
@@ -348,8 +362,11 @@ int main(int argc, char *argv[]) {
 
 bool is_avail(SpaceTimePoint p, const std::unordered_set<SpaceTimePoint> &reservations) {
     if (reservations.empty()) {
+        std::cout << "Case reservations.empty()\n";
         return true;
     }
+
+    std::cout << (reservations.find(SpaceTimePoint(p.x, p.y, p.t - 1)) != reservations.end()) << "\n";
 
     return reservations.find(p) == reservations.end()
            && reservations.find(SpaceTimePoint(p.x, p.y, p.t - 1)) == reservations.end()
@@ -382,8 +399,12 @@ bool find_actions(SpaceTimePoint start, int32_t charge, int32_t needed_steps, in
     }
 
     std::vector<SpaceTimePoint> avail_neighbours;
-    std::copy_if(neighbours.begin(), neighbours.end(), std::back_inserter(avail_neighbours),
-                 [&](const auto &n) { return is_avail(n, reservations); });
+    for (const auto &n : neighbours) {
+        if (is_avail(n, reservations)) {
+            avail_neighbours.push_back(n);
+        }
+    }
+    print_path(avail_neighbours, "avail_neighbours");
     // we do a beautiful random walk. Why? Why not!
     std::shuffle(avail_neighbours.begin(), avail_neighbours.end(), rng);
     for (const auto n : avail_neighbours) {

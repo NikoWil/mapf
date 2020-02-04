@@ -157,7 +157,7 @@ a_star(const SpaceTimePoint start, const SpacePoint goal, uint32_t rest_after, i
             } else if (came_from.find(n) == came_from.end()) { // no reservations that trouble us
                 if (SpacePoint(n) == goal) { // check if the goal is free for the additional rest period
                     bool all_available = true;
-                    for (uint32_t i{1}; i <= rest_after + 1; ++i) {
+                    for (uint32_t i{0}; i <= rest_after + 1; ++i) {
                         // n.t is already 1 in the
                         // n.t + k is k + 1 in the future
                         // if k + 1 in the future are okay with us, we can stay for k and be fine?
